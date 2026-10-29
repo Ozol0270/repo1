@@ -1,0 +1,137 @@
+import java.awt.FlowLayout
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
+import javax.swing.*
+
+fun main() {
+    // створюємо вікно
+    val frame = JFrame("Калькулятор чайових")
+    frame.setSize(320, 220)
+    frame.layout = FlowLayout()
+    frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+
+    // поле для суми рахунку
+    val billField = JTextField(15)
+
+    // радіокнопки відсотків
+    val rb10 = JRadioButton("10%")
+    val rb15 = JRadioButton("15%")
+    val rb20 = JRadioButton("20%")
+    rb20.isSelected = true
+
+    // група, щоб вибрати лише одну
+    val group = ButtonGroup()
+    group.add(rb10)
+    group.add(rb15)
+    group.add(rb20)
+
+    // написи результатів
+    val tipLabel = JLabel("Чайові: 0.00 грн")
+    val totalLabel = JLabel("Загальна сума: 0.00 грн")
+
+    // перерахунок результату
+    fun update() {
+        val bill = billField.text.toDoubleOrNull() ?: 0.0
+        val percent = if (rb10.isSelected) 10 else if (rb15.isSelected) 15 else 20
+        val tip = bill * percent / 100
+        tipLabel.text = "Чайові: %.2f грн".format(tip)
+        totalLabel.text = "Загальна сума: %.2f грн".format(bill + tip)
+    }
+
+    // головне меню
+    val menuBar = JMenuBar()
+
+    // меню "файл"
+    val fileMenu = JMenu("Файл")
+
+    // пункт "очистити"
+    val clearItem = JMenuItem("Очистити")
+    clearItem.addActionListener {
+        // скидаємо поле та вибір
+        billField.text = ""
+        rb20.isSelected = true
+        update()
+    }
+
+    // пункт "вихід"
+    val exitItem = JMenuItem("Вихід")
+    exitItem.addActionListener {
+        // питаємо підтвердження
+        val answer = JOptionPane.showConfirmDialog(
+            frame,
+            "Ви дійсно хочете вийти?",
+            "Підтвердження виходу",
+            JOptionPane.YES_NO_OPTION
+        )
+        if (answer == JOptionPane.YES_OPTION) {
+            System.exit(0)
+        }
+    }
+
+    // додаємо пункти у "файл"
+    fileMenu.add(clearItem)
+    fileMenu.addSeparator()
+    fileMenu.add(exitItem)
+
+    // меню "довідка"
+    val helpMenu = JMenu("Довідка")
+
+    // пункт "про програму"
+    val aboutItem = JMenuItem("Про програму")
+    aboutItem.addActionListener {
+        JOptionPane.showMessageDialog(
+            frame,
+            "Калькулятор чайових\nВерсія 1.0\n\nПростий застосунок для обчислення чайових\nна основі суми рахунку та відсотка.",
+            "Про програму",
+            JOptionPane.INFORMATION_MESSAGE
+        )
+    }
+
+    // пункт "як користуватися"
+    val helpItem = JMenuItem("Як користуватися")
+    helpItem.addActionListener {
+        JOptionPane.showMessageDialog(
+            frame,
+            "1. Введіть суму рахунку в текстове поле.\n" +
+                    "2. Оберіть відсоток чайових (10%, 15% або 20%).\n" +
+                    "3. Результат оновиться автоматично.\n\n" +
+                    "Пункт меню «Файл → Очистити» скидає всі дані.",
+            "Довідка",
+            JOptionPane.INFORMATION_MESSAGE
+        )
+    }
+
+    // додаємо пункти у "довідку"
+    helpMenu.add(helpItem)
+    helpMenu.add(aboutItem)
+
+    // прикріплюємо меню до вікна
+    menuBar.add(fileMenu)
+    menuBar.add(helpMenu)
+    frame.jMenuBar = menuBar
+
+    // реакція на введення
+    billField.addKeyListener(object : KeyListener {
+        override fun keyTyped(e: KeyEvent) = update()
+        override fun keyPressed(e: KeyEvent) {}
+        override fun keyReleased(e: KeyEvent) = update()
+    })
+
+    // реакція на зміну відсотка
+    rb10.addActionListener { update() }
+    rb15.addActionListener { update() }
+    rb20.addActionListener { update() }
+
+    // додаємо компоненти у вікно
+    frame.add(JLabel("Сума рахунку:"))
+    frame.add(billField)
+    frame.add(rb10)
+    frame.add(rb15)
+    frame.add(rb20)
+    frame.add(tipLabel)
+    frame.add(totalLabel)
+
+    // центруємо та показуємо вікно
+    frame.setLocationRelativeTo(null)
+    frame.isVisible = true
+}
