@@ -1,0 +1,245 @@
+import tkinter as tk
+from tkinter import messagebox
+
+
+# клас для книг
+class Book:
+    def __init__(self, namebook, author, year, genre):
+        self.namebook = namebook   # назва книги
+        self.author = author       # автор
+        self.year = year           # рік видання
+        self.genre = genre         # жанр
+
+    # метод який повертає рядок з інформацією про книгу
+    def show_info(self):
+        return f"{self.namebook} — {self.author} ({self.year}) — {self.genre}"
+
+
+# клас для читача
+class Reader:
+    def __init__(self, namereader, years, reading=None):
+        self.namereader = namereader   # ім'я читача
+        self.years = years     # вік
+        self.reading = reading if reading is not None else []  # список прочитаного
+
+    # метод який повертає рядок з інформацією про читача
+    def show_info(self):
+        return f"Читач: {self.namereader}, вік: {self.years}, читає: {', '.join(self.reading) if self.reading else 'нічого'}"
+
+    # рахуємо скільки книг прочитав читач
+    def books_count(self):
+        return len(self.reading)
+
+
+# клас для бібліотеки
+class Library:
+    def __init__(self):
+        self.books = []     # список книг у бібліотеці
+        self.readers = []   # список читачів
+
+    # додати книгу в бібліотеку
+    def add_book(self, book):
+        self.books.append(book)
+
+    # видалити книгу за індексом
+    def remove_book(self, index):
+        if 0 <= index < len(self.books):
+            del self.books[index]
+
+    # очистити всі книги
+    def clear_books(self):
+        self.books.clear()
+
+    # додати читача
+    def add_reader(self, reader):
+        self.readers.append(reader)
+
+    # порахувати загальну кількість книг у бібліотеці
+    def calculate_total(self):
+        return len(self.books)
+
+
+# список доступних книг
+# список доступних книг
+books = [
+    Book("Хірург", "Тесс Геррітсен", 2001, "трилер"),
+    Book("Асистент", "Тесс Геррітсен", 2002, "трилер"),
+    Book("Грішна", "Тесс Геррітсен", 2003, "трилер"),
+    Book("Двійник", "Тесс Геррітсен", 2004, "трилер"),
+    Book("Смертниці", "Тесс Геррітсен", 2005, "трилер"),
+    Book("Хімія смерті", "Саймон Бекетт", 2006, "детектив"),
+    Book("Записано на кістках", "Саймон Бекетт", 2007, "детектив")
+]
+
+# створюємо читача і бібліотеку
+reader = Reader("Вікторія", 19, ["Хімія смерті"])
+library = Library()
+
+
+#створення графічного вікна
+window = tk.Tk()
+window.title("Інформаційна система бібліотеки")
+window.geometry("650x700")
+
+# заголовок вікна
+title_label = tk.Label(window, text="Інформаційна система бібліотеки",
+                       font=("Arial", 14, "bold"))
+title_label.pack(pady=10)
+
+# список доступних книг
+books_label = tk.Label(window, text="Доступні книги")
+books_label.pack()
+
+books_list = tk.Listbox(window, width=70, height=8)
+books_list.pack()
+
+# заповнюємо список доступних книг
+for book in books:
+    books_list.insert(tk.END, f"{book.namebook} — {book.author} ({book.year}) — {book.genre}")
+
+# список бібліотеки
+library_label = tk.Label(window, text="Бібліотека")
+library_label.pack(pady=10)
+
+library_list = tk.Listbox(window, width=70, height=8)
+library_list.pack()
+
+# інформаційні мітки
+count_label = tk.Label(window, text="Книг у бібліотеці: 0")
+count_label.pack(pady=3)
+
+genre_count_label = tk.Label(window, text="Унікальних жанрів: 0")
+genre_count_label.pack(pady=3)
+
+reader_label = tk.Label(window, text=f"Читач: {reader.namereader} (вік: {reader.years})")
+reader_label.pack(pady=3)
+
+
+# функція для оновлення списку бібліотеки та всіх міток
+def update_library_view():
+    # очищаємо список і заповнюємо заново
+    library_list.delete(0, tk.END)
+    for book in library.books:
+        library_list.insert(tk.END, f"{book.namebook} — {book.author} ({book.year})")
+
+    # оновлюємо кількість книг
+    total = library.calculate_total()
+    count_label.config(text=f"Книг у бібліотеці: {total}")
+
+    # рахуємо унікальні жанри
+    genres = set(book.genre for book in library.books)
+    genre_count_label.config(text=f"Унікальних жанрів: {len(genres)}")
+
+    # блокуємо або розблоковуємо кнопки залежно від наявності книг
+    if library.books:
+        remove_button.config(state=tk.NORMAL)
+        clear_button.config(state=tk.NORMAL)
+        info_button.config(state=tk.NORMAL)
+    else:
+        remove_button.config(state=tk.DISABLED)
+        clear_button.config(state=tk.DISABLED)
+        info_button.config(state=tk.DISABLED)
+
+
+# функція додавання книги в бібліотеку
+def add_to_library():
+    selected = books_list.curselection()
+    if not selected:
+        messagebox.showwarning("Увага", "Оберіть книгу зі списку")
+        return
+
+    index = selected[0]
+    book = books[index]
+
+    # перевірка, чи книга вже є в бібліотеці
+    if book in library.books:
+        messagebox.showinfo("Інформація", "Ця книга вже є у бібліотеці")
+        return
+
+    library.add_book(book)
+    update_library_view()
+
+
+# функція видалення книги з підтвердженням
+def remove_from_library():
+    selected = library_list.curselection()
+    if not selected:
+        messagebox.showwarning("Увага", "Оберіть книгу для видалення")
+        return
+
+    index = selected[0]
+    book = library.books[index]
+
+    # запитуємо підтвердження
+    answer = messagebox.askyesno(
+        "Підтвердження",
+        f"Ви дійсно хочете видалити книгу\n«{book.namebook}» з бібліотеки?"
+    )
+    if answer:
+        library.remove_book(index)
+        update_library_view()
+
+
+# функція очищення всієї бібліотеки з підтвердженням
+def clear_library():
+    if not library.books:
+        messagebox.showinfo("Інформація", "Бібліотека вже порожня")
+        return
+
+    answer = messagebox.askyesno(
+        "Підтвердження",
+        "Ви дійсно хочете очистити всю бібліотеку?"
+    )
+    if answer:
+        library.clear_books()
+        update_library_view()
+
+
+# функція показу інформації про вибрану книгу
+def show_info():
+    selected = library_list.curselection()
+    if not selected:
+        messagebox.showwarning("Увага", "Оберіть книгу для перегляду інформації")
+        return
+
+    index = selected[0]
+    book = library.books[index]
+
+    messagebox.showinfo(
+        "Інформація про книгу",
+        f"Назва: {book.namebook}\n"
+        f"Автор: {book.author}\n"
+        f"Рік: {book.year}\n"
+        f"Жанр: {book.genre}"
+    )
+
+
+# блок кнопок
+buttons_frame = tk.Frame(window)
+buttons_frame.pack(pady=15)
+
+# кнопка додавання книги
+add_button = tk.Button(buttons_frame, text="Додати до бібліотеки",
+                       command=add_to_library, width=22)
+add_button.grid(row=0, column=0, padx=5, pady=5)
+
+# кнопка видалення книги
+remove_button = tk.Button(buttons_frame, text="Видалити книгу",
+                          command=remove_from_library, width=22, state=tk.DISABLED)
+remove_button.grid(row=0, column=1, padx=5, pady=5)
+
+# кнопка показу інформації
+info_button = tk.Button(buttons_frame, text="Інформація",
+                        command=show_info, width=22, state=tk.DISABLED)
+info_button.grid(row=1, column=0, padx=5, pady=5)
+
+# кнопка очищення бібліотеки
+clear_button = tk.Button(buttons_frame, text="Очистити все",
+                         command=clear_library, width=22, state=tk.DISABLED)
+clear_button.grid(row=1, column=1, padx=5, pady=5)
+
+# початкове оновлення, щоб кнопки одразу мали правильний стан
+update_library_view()
+
+# запуск головного циклу програми
+window.mainloop()
